@@ -1,14 +1,14 @@
 package com.warehouse_es.shared.eventstore;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "events")
-@Getter @Setter
+@Getter @Setter @Builder
+@NoArgsConstructor @AllArgsConstructor
 public class EventStoreEntity {
 
     @Id
@@ -34,5 +34,4 @@ public class EventStoreEntity {
     @Column(name = "occurred_at", nullable = false)
     private Instant occurredAt;
 
-    protected EventStoreEntity() {} // JPA need empty constructor
 }
