@@ -131,6 +131,12 @@ public class StockAggregate {
         uncommittedEvents.add(event);
     }
 
+    public List<DomainEvent> pullUncommittedEvents() {
+        List<DomainEvent> copy = List.copyOf(uncommittedEvents);
+        uncommittedEvents.clear();
+        return copy;
+    }
+
     public String getAggregateId() {
         return aggregateId(warehouseCode, skuCode);
     }
