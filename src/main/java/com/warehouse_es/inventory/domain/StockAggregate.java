@@ -1,6 +1,8 @@
 package com.warehouse_es.inventory.domain;
 
 
+import com.warehouse_es.common.exception.ErrorCode;
+import com.warehouse_es.common.exception.WarehouseException;
 import com.warehouse_es.inventory.domain.event.StockEvents;
 import com.warehouse_es.shared.event.DomainEvent;
 import lombok.Getter;
@@ -55,7 +57,7 @@ public class StockAggregate {
 
     // IMPORT
     public void receive(int qty, String lotNumber, String sourceRef) {
-        if (qty <= 0) throw new IllegalArgumentException("Import quantity must larger than 0!");
+        if (qty <= 0) throw new WarehouseException(ErrorCode.IMPORT_QUANTITY_INVALID);
 
         StockEvents.StockReceived event = StockEvents.StockReceived.builder()
                 .eventId(UUID.randomUUID())
@@ -74,7 +76,7 @@ public class StockAggregate {
 
     // EXPORT
     public void pick(int qty, String reason, String performedBy) {
-        if (qty <= 0) throw new IllegalArgumentException("Export quantity must larger than 0");
+        if (qty <= 0) throw new WarehouseException(ErrorCode.EXPORT_QUANTITY_INVALID);
         if (qty > quantity) {
             throw new IllegalStateException(
                     "Not enough inventory at " + warehouseCode + ": require " + qty + " but only " + this.quantity);
@@ -97,7 +99,7 @@ public class StockAggregate {
 
     // ADJUST
     public void adjust(int delta, String reason, String performedBy) {
-        if (quantity + delta < 0) throw new IllegalArgumentException("Adjustment results in negative inventory — invalid.");
+        if (quantity + delta < 0) throw new WarehouseException(ErrorCode.ADJUSTMENT_INVALID);
 
         StockEvents.StockAdjusted event = StockEvents.StockAdjusted.builder()
                 .eventId(UUID.randomUUID())
@@ -121,13 +123,16 @@ public class StockAggregate {
             case StockEvents.StockReceived e -> quantity += e.quantity();
             case StockEvents.StockPicked e -> quantity -= e.quantity();
             case StockEvents.StockAdjusted e -> quantity += e.delta();
-            default -> throw new IllegalArgumentException("Event not defined: " + event);
+            default -> throw new WarehouseException(
+                    ErrorCode.UNSUPPORTED_EVENT,
+                    event.getClass().getSimpleName()
+            );
         }
     }
 
     private void raise(DomainEvent event) {
         apply(event);
-        this.version++;
+        this.version++; // in RAM
         uncommittedEvents.add(event);
     }
 

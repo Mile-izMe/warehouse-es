@@ -1,6 +1,8 @@
 package com.warehouse_es.inventory.application.command;
 
 import com.warehouse_es.catalog.application.CatalogValidationService;
+import com.warehouse_es.common.exception.ErrorCode;
+import com.warehouse_es.common.exception.WarehouseException;
 import com.warehouse_es.inventory.domain.StockAggregate;
 import com.warehouse_es.inventory.presentation.dto.StockAdjustRequest;
 import com.warehouse_es.inventory.presentation.dto.StockPickRequest;
@@ -64,7 +66,7 @@ public class StockCommandService {
     private void validateReferenceData(String skuCode, String warehouseCode) {
         boolean result = catalogValidator.checkActiveProductAndWarehouse(skuCode, warehouseCode);
         if (!result) {
-            throw new IllegalArgumentException("Warehouse or SKU is invalid/inactive!");
+            throw new WarehouseException(ErrorCode.PRODUCT_WAREHOUSE_INVALID);
         }
     }
 

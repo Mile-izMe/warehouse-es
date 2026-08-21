@@ -19,8 +19,8 @@ public class Warehouse extends Auditable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 50)
-    private String code;
+    @Column(name = "warehouse_code", nullable = false, length = 50)
+    private String warehouseCode;
 
     @Column(nullable = false, length = 255)
     private String name;

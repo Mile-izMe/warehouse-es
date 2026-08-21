@@ -55,6 +55,9 @@ public class EventStore {
         }
 
         long version = expectedVersion;
+
+        List<EventStoreEntity> entitiesToSave = new java.util.ArrayList<>();
+
         for (DomainEvent event : newEvents) {
             version++;
 
@@ -67,9 +70,9 @@ public class EventStore {
                     .occurredAt(event.occurredAt())
                     .build();
 
-            repository.save(entity);
-
+            entitiesToSave.add(entity);
         }
+        repository.saveAll(entitiesToSave);
     }
 
 }
