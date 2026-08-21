@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/warehouse_db
+    username: warehouse
+    password: Mile123_A
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate # Let flyway create table
+    show-sql: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method # Sort API by: GET, POST, PUT, DELETE
+    tagsSorter: alpha        # Sort Controller by alphabet
+
+  packages-to-scan: com.warehouse_es

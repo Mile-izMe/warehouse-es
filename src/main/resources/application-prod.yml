@@ -1,0 +1,11 @@
+# Temporary not need anything
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: false
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method # Sort API by: GET, POST, PUT, DELETE
+    tagsSorter: alpha        # Sort Controller by alphabet
+
+  packages-to-scan: com.cinebook
