@@ -1,0 +1,19 @@
+package com.warehouse_es.catalog.infrastructure.warehouse;
+
+import com.warehouse_es.catalog.domain.warehouse.WarehouseStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface SpringDataWarehouseRepository extends JpaRepository<WarehouseEntity, UUID> {
+
+    Optional<WarehouseEntity> findByWarehouseCode(String warehouseCode);
+
+    boolean existsByWarehouseCodeAndStatus(String warehouseCode, String status);
+
+    List<WarehouseEntity> findAllByStatus(WarehouseStatus status);
+}

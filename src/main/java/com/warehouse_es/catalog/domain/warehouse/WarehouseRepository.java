@@ -1,14 +1,18 @@
 package com.warehouse_es.catalog.domain.warehouse;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface WarehouseRepository extends JpaRepository<Warehouse, UUID> {
+public interface WarehouseRepository {
 
     Optional<Warehouse> findByWarehouseCode(String warehouseCode);
 
     boolean existsByWarehouseCodeAndStatus(String warehouseCode, String status);
 
+    Warehouse save(Warehouse warehouse);
+
+    Optional<Warehouse> findById(UUID id);
+
+    List<Warehouse> findAllActive();
 }

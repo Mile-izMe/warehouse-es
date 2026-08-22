@@ -1,10 +1,10 @@
 package com.warehouse_es.inventory.presentation;
 
 import com.warehouse_es.inventory.application.command.StockCommandService;
-import com.warehouse_es.inventory.presentation.dto.StockAdjustRequest;
-import com.warehouse_es.inventory.presentation.dto.StockPickRequest;
-import com.warehouse_es.inventory.presentation.dto.StockReceiveRequest;
-import com.warehouse_es.inventory.presentation.dto.StockResponse;
+import com.warehouse_es.inventory.presentation.dto.request.StockAdjustRequest;
+import com.warehouse_es.inventory.presentation.dto.request.StockPickRequest;
+import com.warehouse_es.inventory.presentation.dto.request.StockReceiveRequest;
+import com.warehouse_es.inventory.presentation.dto.response.StockResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/warehouses/{warehouseCode}/stock")
 @RequiredArgsConstructor
-public class StockController {
+public class StockCommandController {
 
     private final StockCommandService service;
 

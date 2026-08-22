@@ -1,4 +1,4 @@
-package com.warehouse_es.inventory.presentation.dto;
+package com.warehouse_es.inventory.presentation.dto.response;
 
 import lombok.Builder;
 
