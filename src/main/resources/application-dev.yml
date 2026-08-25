@@ -9,6 +9,16 @@ spring:
     hibernate:
       ddl-auto: validate # Let flyway create table
     show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+
+app:
+  kafka:
+    topic:
+      stock-topic: Stock
+    consumer:
+      group-id-prefix: warehouse-group-id
+      max-failure: 3
 
 springdoc:
   swagger-ui:
