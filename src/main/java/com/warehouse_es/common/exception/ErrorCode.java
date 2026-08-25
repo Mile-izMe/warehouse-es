@@ -15,9 +15,12 @@ public enum ErrorCode {
     // --- Stock errors ---
     PRODUCT_WAREHOUSE_INVALID(HttpStatus.BAD_REQUEST, "SKU-001", "Warehouse or SKU is invalid/inactive!"),
     IMPORT_QUANTITY_INVALID(HttpStatus.BAD_REQUEST, "SKU-002", "Import quantity must larger than 0!"),
-    EXPORT_QUANTITY_INVALID(HttpStatus.BAD_REQUEST, "SKU-003", "Phone already existed in system"),
-    ADJUSTMENT_INVALID(HttpStatus.BAD_REQUEST, "SKU-004", "Token is invalid"),
-    UNSUPPORTED_EVENT(HttpStatus.INTERNAL_SERVER_ERROR, "SKU-005", "Event not defined in apply(): %s");
+    EXPORT_QUANTITY_INVALID(HttpStatus.BAD_REQUEST, "SKU-003", "Phone already existed in system!"),
+    ADJUSTMENT_INVALID(HttpStatus.BAD_REQUEST, "SKU-004", "Token is invalid!"),
+    UNSUPPORTED_EVENT(HttpStatus.INTERNAL_SERVER_ERROR, "SKU-005", "Event not defined in apply(): %s"),
+    WAREHOUSE_CODE_NULL(HttpStatus.BAD_REQUEST, "SKU-006", "Warehouse code must not be empty!"),
+    WAREHOUSE_NOT_ABLE_TO_UPDATE(HttpStatus.BAD_REQUEST, "SKU-007", "Can not update due to inactive warehouse!"),
+    WAREHOUSE_INACTIVE(HttpStatus.BAD_REQUEST, "SKU-008", "Warehouse has been inactivated");
 
     private final HttpStatus status;
     private final String code;

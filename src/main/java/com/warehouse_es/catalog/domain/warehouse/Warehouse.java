@@ -1,5 +1,7 @@
 package com.warehouse_es.catalog.domain.warehouse;
 
+import com.warehouse_es.common.exception.ErrorCode;
+import com.warehouse_es.common.exception.WarehouseException;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,7 +17,7 @@ public class Warehouse {
     private String address;
     private WarehouseStatus status;
 
-    // 2. BEHAVIORS: BUSINESS LOGIC
+    // BEHAVIORS: BUSINESS LOGIC
 
     /**
      * Factory method to create a new Warehouse from user's Request.
@@ -23,7 +25,7 @@ public class Warehouse {
      */
     public static Warehouse createNew(String warehouseCode, String name, String address) {
         if (warehouseCode == null || warehouseCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("Mã kho không được để trống!");
+            throw new WarehouseException(ErrorCode.WAREHOUSE_CODE_NULL);
         }
 
         return Warehouse.builder()
@@ -40,7 +42,7 @@ public class Warehouse {
     public void updateInfo(String newName, String newAddress) {
         // Business rule: Warehouse inactive not allowed to update
         if (this.status == WarehouseStatus.INACTIVE) {
-            throw new IllegalStateException("Không thể sửa thông tin khi kho đang bị khóa (INACTIVE)!");
+            throw new WarehouseException(ErrorCode.WAREHOUSE_NOT_ABLE_TO_UPDATE);
         }
 
         this.name = newName;
@@ -52,7 +54,7 @@ public class Warehouse {
      */
     public void deactivate() {
         if (this.status == WarehouseStatus.INACTIVE) {
-            throw new IllegalStateException("Kho này đã bị khóa từ trước!");
+            throw new WarehouseException(ErrorCode.WAREHOUSE_INACTIVE);
         }
         this.status = WarehouseStatus.INACTIVE;
     }
