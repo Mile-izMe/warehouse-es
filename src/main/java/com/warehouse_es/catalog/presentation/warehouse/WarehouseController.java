@@ -72,7 +72,7 @@ public class WarehouseController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiSuccessResponse.<WarehouseResponse>builder()
-                        .message("Tạo mới kho thành công!")
+                        .message("Create new warehouse success!")
                         .data(responseData)
                         .build());
     }

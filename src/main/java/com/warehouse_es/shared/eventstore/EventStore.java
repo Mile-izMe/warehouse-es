@@ -21,7 +21,6 @@ public class EventStore {
     private final EventStoreRepository repository;
     private final EventSerializer serializer;
 
-
     /**
      * Read all history event of 1 aggregate, followed by asc version.
      * Use to replay -> get current state (StockItem.replay()).
@@ -33,12 +32,10 @@ public class EventStore {
                 .toList();
     }
 
-
     /** Current Version (= Nums of events possessed)*/
     public long currentVersion(String aggregateId) {
         return repository.getCurrentVersion(aggregateId);
     }
-
 
     /**
      * Write new events after business call (receive/pick/adjust) to DB.

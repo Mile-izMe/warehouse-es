@@ -1,0 +1,26 @@
+services:
+  # Debezium (Change Data Capture)
+  debezium:
+    image: quay.io/debezium/connect:2.5
+    container_name: warehouse_debezium
+    depends_on:
+      - kafka
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: warehouse_kafka:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offsets
+      STATUS_STORAGE_TOPIC: my_connect_statuses
+
+  # Debezium UI (Handle Connectors)
+  debezium-ui:
+    image: quay.io/debezium/debezium-ui:2.5
+    container_name: warehouse_debezium_ui
+    depends_on:
+      - debezium
+    ports:
+      - "8084:8080"
+    environment:
+      KAFKA_CONNECT_URIS: http://warehouse_debezium:8083
