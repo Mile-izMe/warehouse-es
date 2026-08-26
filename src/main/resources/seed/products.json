@@ -1,0 +1,82 @@
+[
+  {
+    "sku": "LAP-MAC-M3",
+    "name": "MacBook Pro M3 14 inch",
+    "description": "Laptop Apple MacBook Pro chip M3 bản tiêu chuẩn",
+    "unit": "Cái",
+    "minStock": 5,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "MOU-LOGI-MX",
+    "name": "Logitech MX Master 3S",
+    "description": "Chuột không dây công thái học cao cấp",
+    "unit": "Cái",
+    "minStock": 20,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "CAB-TYPEC-01",
+    "name": "Cáp Sạc Type-C 2M",
+    "description": "Cáp sạc bọc dù độ dài 2 mét hỗ trợ sạc nhanh",
+    "unit": "Sợi",
+    "minStock": 100,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "MON-DELL-U27",
+    "name": "Màn hình Dell UltraSharp U2723QE",
+    "description": "Màn hình 27 inch 4K dành cho thiết kế đồ họa",
+    "unit": "Cái",
+    "minStock": 10,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "KEY-KEYCHRON-K8",
+    "name": "Bàn phím cơ Keychron K8 Pro",
+    "description": "Bàn phím cơ không dây TKL hotswap",
+    "unit": "Cái",
+    "minStock": 15,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "AUD-SONY-XM5",
+    "name": "Tai nghe Sony WH-1000XM5",
+    "description": "Tai nghe chống ồn chủ động cao cấp",
+    "unit": "Cái",
+    "minStock": 8,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "STO-SAM-980",
+    "name": "Ổ cứng SSD Samsung 980 PRO 1TB",
+    "description": "Ổ cứng thể rắn PCIe NVMe Gen 4",
+    "unit": "Cái",
+    "minStock": 30,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "RAM-COR-32",
+    "name": "RAM Corsair Vengeance 32GB",
+    "description": "DDR5 5200MHz (2x16GB)",
+    "unit": "Cặp",
+    "minStock": 25,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "FUR-DESK-SMART",
+    "name": "Bàn nâng hạ SmartDesk",
+    "description": "Bàn làm việc đứng công thái học điều chỉnh độ cao",
+    "unit": "Cái",
+    "minStock": 5,
+    "status": "ACTIVE"
+  },
+  {
+    "sku": "FUR-CHAIR-ERGO",
+    "name": "Ghế công thái học Herman Miller",
+    "description": "Ghế lưới cao cấp hỗ trợ cột sống",
+    "unit": "Cái",
+    "minStock": 3,
+    "status": "ACTIVE"
+  }
+]

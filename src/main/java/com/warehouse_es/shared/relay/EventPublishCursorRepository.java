@@ -17,4 +17,6 @@ public interface EventPublishCursorRepository extends JpaRepository<EventPublish
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM EventPublishCursor c WHERE c.workerId = :workerId")
     Optional<EventPublishCursor> findForUpdate(String workerId);
+
+    boolean existsByWorkerId(String workerId);
 }

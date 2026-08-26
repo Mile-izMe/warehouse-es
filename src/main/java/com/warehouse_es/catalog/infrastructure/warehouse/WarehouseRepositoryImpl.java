@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -54,4 +55,19 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
         return mapper.toDomainList(activeEntities);
     }
 
+    @Override
+    public int findNumDataInDatabase() {
+        return Math.toIntExact(jpaRepository.count());
+    }
+
+    @Override
+    public List<Warehouse> saveAll(List<Warehouse> warehouses) {
+        // Turn List<Domain> -> List<Entity>
+        List<WarehouseEntity> entities = mapper.toEntityList(warehouses);
+
+        List<WarehouseEntity> savedEntities = jpaRepository.saveAll(entities);
+
+        // Turn List<Entity> -> List<Domain>
+        return mapper.toDomainList(savedEntities);
+    }
 }

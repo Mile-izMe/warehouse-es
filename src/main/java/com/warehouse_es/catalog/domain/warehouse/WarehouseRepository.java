@@ -15,4 +15,8 @@ public interface WarehouseRepository {
     Optional<Warehouse> findById(UUID id);
 
     List<Warehouse> findAllActive();
+
+    int findNumDataInDatabase();
+
+    List<Warehouse> saveAll(List<Warehouse> warehouses);
 }
