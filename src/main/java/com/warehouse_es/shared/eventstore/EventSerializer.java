@@ -54,7 +54,7 @@ public class EventSerializer {
 
     /** Class event name (eventType col) */
     public String eventTypeOf(DomainEvent event) {
-        return event.getClass().getSimpleName();
+        return event.eventType();
     }
 
     private <T> T readValue(String json, Class<T> clazz) {
