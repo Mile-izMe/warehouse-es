@@ -3,13 +3,14 @@ package com.warehouse_es.inventory.domain;
 
 import com.warehouse_es.common.exception.ErrorCode;
 import com.warehouse_es.common.exception.WarehouseException;
+import com.warehouse_es.inventory.domain.dto.StockSnapshot;
 import com.warehouse_es.inventory.domain.event.StockEvents;
+import com.warehouse_es.shared.domain.AggregateRoot;
 import com.warehouse_es.shared.event.DomainEvent;
+import com.warehouse_es.shared.snapshot.SnapshotSerializer;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,18 +24,20 @@ import java.util.UUID;
  *   not edit field actively.
  */
 @Getter
-@RequiredArgsConstructor
-public class StockAggregate {
+public class StockAggregate extends AggregateRoot {
 
     // aggregateId = "warehouseCode:skuCode", e.g "WH01:SKU001"
     // -> inventory is calculated for each storage, for later Saga transfer.
     private final String warehouseCode;
     private final String skuCode;
     private int quantity = 0;
-    private long version = 0;
 
-    // List of NEW EVENT generated in this behavior (not save DB yet)
-    private final List<DomainEvent> uncommittedEvents = new ArrayList<>();
+    // --- CONSTRUCTOR ---
+    public StockAggregate(String warehouseCode, String skuCode) {
+        this.warehouseCode = warehouseCode;
+        this.skuCode = skuCode;
+        this.id = aggregateId(warehouseCode, skuCode);
+    }
 
     public static String aggregateId(String warehouseCode, String skuCode) {
         return warehouseCode + ":" + skuCode;
@@ -43,17 +46,13 @@ public class StockAggregate {
     /** Recreate aggregate by replay event's history in DB */
     public static StockAggregate replay(String warehouseCode, String skuCode, List<DomainEvent> history) {
         StockAggregate aggregate = new StockAggregate(warehouseCode, skuCode);
-        for (DomainEvent event : history) {
-            aggregate.apply(event);
-            aggregate.version = event.aggregateVersion();
-        }
+        aggregate.replay(history);
         return aggregate;
     }
 
     // ===== BUSINESS LOGIC (business behavior) =====
     // This is where event rules are validated BEFORE the event is raised.
-    // Principle: A saved event represents a fact that has already occurred;
-    // events that violate rules must not be raised.
+    // Principle: If valid -> Build Event -> raise()
 
     // IMPORT
     public void receive(int qty, String lotNumber, String sourceRef) {
@@ -61,8 +60,8 @@ public class StockAggregate {
 
         StockEvents.StockReceived event = StockEvents.StockReceived.builder()
                 .eventId(UUID.randomUUID())
-                .aggregateId(getAggregateId())
-                .aggregateVersion(this.version + 1)
+                .aggregateId(this.id)
+                .aggregateVersion(getNextVersion())
                 .warehouseCode(this.warehouseCode)
                 .sku(this.skuCode)
                 .quantity(qty)
@@ -84,8 +83,8 @@ public class StockAggregate {
 
         StockEvents.StockPicked event = StockEvents.StockPicked.builder()
                 .eventId(UUID.randomUUID())
-                .aggregateId(getAggregateId())
-                .aggregateVersion(this.version + 1)
+                .aggregateId(this.id)
+                .aggregateVersion(getNextVersion())
                 .warehouseCode(this.warehouseCode)
                 .sku(this.skuCode)
                 .quantity(qty)
@@ -103,8 +102,8 @@ public class StockAggregate {
 
         StockEvents.StockAdjusted event = StockEvents.StockAdjusted.builder()
                 .eventId(UUID.randomUUID())
-                .aggregateId(getAggregateId())
-                .aggregateVersion(this.version + 1)
+                .aggregateId(this.id)
+                .aggregateVersion(getNextVersion())
                 .warehouseCode(this.warehouseCode)
                 .sku(this.skuCode)
                 .delta(delta)
@@ -116,9 +115,10 @@ public class StockAggregate {
         raise(event);
     }
 
-    // ===== APPLY: how event change the state in RAM =====
+    // ===== MUTATOR: update state in RAM =====
     // This func NOT CONTAIN validate rule — applied only fact that had occurred.
-    private void apply(DomainEvent event) {
+    @Override
+    protected void mutate(DomainEvent event) {
         switch (event) {
             case StockEvents.StockReceived e -> quantity += e.quantity();
             case StockEvents.StockPicked e -> quantity -= e.quantity();
@@ -130,19 +130,16 @@ public class StockAggregate {
         }
     }
 
-    private void raise(DomainEvent event) {
-        apply(event);
-        this.version++; // in RAM
-        uncommittedEvents.add(event);
+    @Override
+    public String createSnapshotPayload(SnapshotSerializer serializer) {
+        StockSnapshot snapshot = new StockSnapshot(this.warehouseCode, this.skuCode, this.quantity);
+        return serializer.serialize(snapshot);
     }
 
-    public List<DomainEvent> pullUncommittedEvents() {
-        List<DomainEvent> copy = List.copyOf(uncommittedEvents);
-        uncommittedEvents.clear();
-        return copy;
-    }
-
-    public String getAggregateId() {
-        return aggregateId(warehouseCode, skuCode);
+    @Override
+    public void restoreFromSnapshot(String payload, long version, SnapshotSerializer serializer) {
+        StockSnapshot snapshot = serializer.deserialize(payload, StockSnapshot.class);
+        this.quantity = snapshot.getQuantity();
+        this.version = version;
     }
 }

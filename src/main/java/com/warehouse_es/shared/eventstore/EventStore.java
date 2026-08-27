@@ -26,7 +26,14 @@ public class EventStore {
      * Use to replay -> get current state (StockItem.replay()).
      */
     public List<DomainEvent> loadHistory(String aggregateId) {
-        return repository.findByAggregateIdOrderByAggregateVersionAsc(aggregateId)
+        return loadEventsAfterVersion(aggregateId, 0L);
+    }
+
+    /**
+     * Use when there is Snapshot: Load event after snapshot
+     */
+    public List<DomainEvent> loadEventsAfterVersion(String aggregateId, long version) {
+        return repository.findByAggregateIdAndAggregateVersionGreaterThanOrderByAggregateVersionAsc(aggregateId, version)
                 .stream()
                 .map(e -> serializer.deserialize(e.getEventType(), e.getPayload()))
                 .toList();

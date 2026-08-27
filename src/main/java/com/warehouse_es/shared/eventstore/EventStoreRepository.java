@@ -15,6 +15,9 @@ public interface EventStoreRepository extends JpaRepository<EventStoreEntity, UU
     // Get all event of 1 aggregate, right order to replay
     List<EventStoreEntity> findByAggregateIdOrderByAggregateVersionAsc(String aggregateId);
 
+    List<EventStoreEntity> findByAggregateIdAndAggregateVersionGreaterThanOrderByAggregateVersionAsc(
+            String aggregateId, long version);
+
     // Check optimistic concurrency: newest version
     // Get MAX of version col, combine with Index UNIQUE => Complexity O(1).
     @Query("SELECT COALESCE(MAX(e.aggregateVersion), 0) FROM EventStoreEntity e WHERE e.aggregateId = :aggregateId")
