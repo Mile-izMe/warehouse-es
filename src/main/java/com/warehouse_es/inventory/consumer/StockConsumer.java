@@ -13,27 +13,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@KafkaListener(
-        topics = "${app.kafka.topic.stock-topic}",
-        groupId = "${app.kafka.consumer.group-id-prefix}"
-)
 public class StockConsumer {
 
     private final StockProjectionHandler stockProjectionHandler;
 
+    @KafkaListener(
+            topics = "${app.kafka.topic.stock-topic}",
+            groupId = "${app.kafka.consumer.group-id-prefix}"
+    )
     @Transactional
     public void handleStockEvents(DomainEvent event) {
         log.info("Received event {} for aggregate {}", event.eventType(), event.aggregateId());
 
-        switch (event.eventType()) {
-            case "StockReceived":
-                stockProjectionHandler.handleStockReceived((StockReceived) event);
+        switch (event) {
+            case StockReceived e:
+                stockProjectionHandler.handleStockReceived(e);
                 break;
-            case "StockPicked":
-                 stockProjectionHandler.handleStockPicked((StockPicked) event);
+            case StockPicked e:
+                 stockProjectionHandler.handleStockPicked(e);
                  break;
-            case "StockAdjusted":
-                stockProjectionHandler.handleStockAdjusted((StockAdjusted) event);
+            case StockAdjusted e:
+                stockProjectionHandler.handleStockAdjusted(e);
                 break;
             default:
                 log.warn("Passing event not supported: {}", event.eventType());

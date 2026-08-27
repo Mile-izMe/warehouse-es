@@ -14,14 +14,15 @@ import com.warehouse_es.shared.processedEvent.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 @Component
 @RequiredArgsConstructor
@@ -33,102 +34,66 @@ public class StockProjectionHandler {
     private final StockDailyMovementReadModelRepository dailyRepo;
     private final ProcessedEventRepository processedEventRepo;
 
+    @Transactional
     public void handleStockReceived(StockReceived event) {
-
-         if (processedEventRepo.existsById(event.eventId())) {
-             log.info("Event {} đã được xử lý. Bỏ qua để tránh duplicate.", event.eventId());
-             return;
-         }
-
-        // Summary: Plus to quantity
-        StockSummaryReadModel summary = summaryRepo
-                .findByWarehouseCodeAndSkuCode(event.warehouseCode(), event.sku())
-                .orElseGet(() -> new StockSummaryReadModel(event.warehouseCode(), event.sku()));
-        summary.applyDelta(event.quantity(), event.occurredAt());
-        summaryRepo.save(summary);
-
-        // Lot: Plus to lot
-        StockLotReadModel lot = lotRepo
-                .findByWarehouseCodeAndSkuCodeAndLotNumber(event.warehouseCode(), event.sku(), event.lotNumber())
-                .orElseGet(() -> new StockLotReadModel(
-                        event.warehouseCode(), event.sku(), event.lotNumber(), event.occurredAt()));
-        lot.addQuantity(event.quantity());
-        lotRepo.save(lot);
-
-        // Daily movement: Plus to right date
-        dailyMovementFor(event.warehouseCode(), event.sku(), event.occurredAt())
-                .ifPresentOrElse(
-                        d -> { d.addReceived(event.quantity()); dailyRepo.save(d); },
-                        () -> {
-                            var d = new StockDailyMovementReadModel(
-                                    event.warehouseCode(), event.sku(), dateOf(event.occurredAt()));
-                            d.addReceived(event.quantity());
-                            dailyRepo.save(d);
-                        });
-
-        processedEventRepo.save(new ProcessedEvent(event.eventId(), Instant.now()));
+        withIdempotency(event.eventId(), () -> {
+            applySummaryDelta(event.warehouseCode(), event.sku(), event.quantity(), event.occurredAt());
+            upsertLot(event.warehouseCode(), event.sku(), event.lotNumber(), event.quantity(), event.occurredAt());
+            upsertDailyMovement(event.warehouseCode(), event.sku(), event.occurredAt(), d -> d.addReceived(event.quantity()));
+        });
     }
 
+    @Transactional
     public void handleStockPicked(StockPicked event) {
-
-        if (processedEventRepo.existsById(event.eventId())) {
-            log.info("Event {} đã được xử lý. Bỏ qua để tránh duplicate.", event.eventId());
-            return;
-        }
-
-        // Summary: minus quantity
-        summaryRepo.findByWarehouseCodeAndSkuCode(event.warehouseCode(), event.sku())
-                .ifPresent(summary -> {
-                    summary.applyDelta(-event.quantity(), event.occurredAt());
-                    summaryRepo.save(summary);
-                });
-
-        // Lot: minus follow FEFO (First-Expiry-First-Out ~ "nhập trước xuất trước"
-        applyFefoDeduction(event.warehouseCode(), event.sku(), event.quantity());
-
-        // Daily movement
-        dailyMovementFor(event.warehouseCode(), event.sku(), event.occurredAt())
-                .ifPresentOrElse(
-                        d -> { d.addPicked(event.quantity()); dailyRepo.save(d); },
-                        () -> {
-                            var d = new StockDailyMovementReadModel(
-                                    event.warehouseCode(), event.sku(), dateOf(event.occurredAt()));
-                            d.addPicked(event.quantity());
-                            dailyRepo.save(d);
-                        });
-
-        processedEventRepo.save(new ProcessedEvent(event.eventId(), Instant.now()));
+        withIdempotency(event.eventId(), () -> {
+            applySummaryDelta(event.warehouseCode(), event.sku(), -event.quantity(), event.occurredAt());
+            applyFefoDeduction(event.warehouseCode(), event.sku(), event.quantity());
+            upsertDailyMovement(event.warehouseCode(), event.sku(), event.occurredAt(), d -> d.addPicked(event.quantity()));
+        });
     }
 
+    @Transactional
     public void handleStockAdjusted(StockAdjusted event) {
+        withIdempotency(event.eventId(), () -> {
+            applySummaryDelta(event.warehouseCode(), event.sku(), event.delta(), event.occurredAt());
+            upsertDailyMovement(event.warehouseCode(), event.sku(), event.occurredAt(), d -> d.addAdjusted(event.delta()));
+        });
+    }
 
-        if (processedEventRepo.existsById(event.eventId())) {
-            log.info("Event {} đã được xử lý. Bỏ qua để tránh duplicate.", event.eventId());
+    // ==================== IDEMPOTENCY WRAPPER ====================
+    /**
+     * Wrapper check duplicate & save processed event.
+     * Business logic code execute by passing through Runnable.
+     */
+    private void withIdempotency(UUID eventId, Runnable businessLogic) {
+        if (processedEventRepo.existsById(eventId)) {
+            log.info("Event {} đã được xử lý. Bỏ qua để tránh duplicate.", eventId);
             return;
         }
 
-        // Summary: plus/minus by delta
-        StockSummaryReadModel summary = summaryRepo
-                .findByWarehouseCodeAndSkuCode(event.warehouseCode(), event.sku())
-                .orElseGet(() -> new StockSummaryReadModel(event.warehouseCode(), event.sku()));
-        summary.applyDelta(event.delta(), event.occurredAt());
-        summaryRepo.save(summary);
+        businessLogic.run();
 
-        // Daily movement
-        dailyMovementFor(event.warehouseCode(), event.sku(), event.occurredAt())
-                .ifPresentOrElse(
-                        d -> { d.addAdjusted(event.delta()); dailyRepo.save(d); },
-                        () -> {
-                            var d = new StockDailyMovementReadModel(
-                                    event.warehouseCode(), event.sku(), dateOf(event.occurredAt()));
-                            d.addAdjusted(event.delta());
-                            dailyRepo.save(d);
-                        });
-
-        processedEventRepo.save(new ProcessedEvent(event.eventId(), Instant.now()));
+        processedEventRepo.save(new ProcessedEvent(eventId, Instant.now()));
     }
 
-    // ================ HELPERS =====================
+    // ==================== SUMMARY ====================
+    private void applySummaryDelta(String wh, String sku, int delta, Instant occurredAt) {
+        StockSummaryReadModel summary = summaryRepo
+                .findByWarehouseCodeAndSkuCode(wh, sku)
+                .orElseGet(() -> new StockSummaryReadModel(wh, sku));
+        summary.applyDelta(delta, occurredAt);
+        summaryRepo.save(summary);
+    }
+
+    // ==================== LOT (FEFO) ====================
+    private void upsertLot(String wh, String sku, String lotNumber, int qty, Instant receivedAt) {
+        StockLotReadModel lot = lotRepo
+                .findByWarehouseCodeAndSkuCodeAndLotNumber(wh, sku, lotNumber)
+                .orElseGet(() -> new StockLotReadModel(wh, sku, lotNumber, receivedAt));
+        lot.addQuantity(qty);
+        lotRepo.save(lot);
+    }
+
 
     /**
      * FEFO: trừ dần từ lot có received_at CŨ NHẤT trước, sang lot mới hơn nếu chưa đủ.
@@ -140,34 +105,45 @@ public class StockProjectionHandler {
                 .findByWarehouseCodeAndSkuCodeOrderByReceivedAtAsc(warehouseCode, skuCode);
 
         int remaining = qtyToDeduct;
+        List<StockLotReadModel> modifiedLots = new ArrayList<>();
+
         for (StockLotReadModel lot : lots) {
             if (remaining <= 0) break;
             if (lot.getQuantity() <= 0) continue;
 
             int deducted = lot.deduct(remaining);
             remaining -= deducted;
-            lotRepo.save(lot);
+            modifiedLots.add(lot);
         }
+
+        // Batch update
+        if (!modifiedLots.isEmpty()) {
+            lotRepo.saveAll(modifiedLots);
+        }
+
         // Nếu remaining > 0 sau khi duyệt hết lot: nghĩa là dữ liệu lot đang lệch so với
         // summary (vd do StockAdjusted đã tăng summary nhưng không tăng lot tương ứng).
-        // Đây là tín hiệu nên log cảnh báo — không throw exception vì đây chỉ là read model,
-        // không được phép làm hỏng luồng ghi event chính (write side đã thành công rồi).
         if (remaining > 0) {
-            System.err.printf(
-                    "[StockProjectionHandler] CẢNH BÁO: lot breakdown thiếu %d đơn vị cho %s:%s — " +
-                            "có thể do StockAdjusted trước đó không đồng bộ ở mức lot.%n",
-                    remaining, warehouseCode, skuCode);
+            log.warn(
+                    "[FEFO] Lot breakdown missing {} unit for {}:{} — " +
+                            "maybe due to previous StockAdjusted not sync at lot.",
+                    remaining, warehouseCode, skuCode
+            );
         }
     }
 
-    private Optional<StockDailyMovementReadModel> dailyMovementFor(
-            String warehouseCode, String skuCode, Instant occurredAt
-    ) {
-        return dailyRepo.findByWarehouseCodeAndSkuCodeAndMovementDate(
-                warehouseCode, skuCode, dateOf(occurredAt)
-        );
-    }
+    // ==================== DAILY MOVEMENT ====================
+    private void upsertDailyMovement(String wh, String sku, Instant occurredAt,
+                                     Consumer<StockDailyMovementReadModel> mutator) {
+        LocalDate date = dateOf(occurredAt);
 
+        StockDailyMovementReadModel daily = dailyRepo
+                .findByWarehouseCodeAndSkuCodeAndMovementDate(wh, sku, date)
+                .orElseGet(() -> new StockDailyMovementReadModel(wh, sku, date));
+
+        mutator.accept(daily);
+        dailyRepo.save(daily);
+    }
     private LocalDate dateOf(Instant instant) {
         return instant.atZone(ZoneOffset.UTC).toLocalDate();
     }

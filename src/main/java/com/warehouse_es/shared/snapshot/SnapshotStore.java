@@ -23,8 +23,8 @@ public class SnapshotStore {
 
         SnapshotStoreEntity entity = SnapshotStoreEntity.builder()
                 .aggregateId(aggregate.getId())
-                .aggregateVersion(aggregate.getVersion())
-                .payload(payload)
+                .snapshotVersion((int) aggregate.getVersion())
+                .snapshotPayload(payload)
                 .build();
 
         repository.save(entity);
@@ -39,8 +39,8 @@ public class SnapshotStore {
 
         if (snapOpt.isPresent()) {
             SnapshotStoreEntity snap = snapOpt.get();
-            emptyAggregate.restoreFromSnapshot(snap.getPayload(), snap.getAggregateVersion(), serializer);
-            log.info("snapshot success for {} from version {}", aggregateId, snap.getAggregateVersion());
+            emptyAggregate.restoreFromSnapshot(snap.getSnapshotPayload(), snap.getSnapshotVersion(), serializer);
+            log.info("snapshot success for {} from version {}", aggregateId, snap.getSnapshotVersion());
             return true;
         }
         return false;

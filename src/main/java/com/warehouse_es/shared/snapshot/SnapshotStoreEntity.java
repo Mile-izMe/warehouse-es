@@ -21,10 +21,10 @@ public class SnapshotStoreEntity {
     @Column(name = "aggregate_id", nullable = false)
     private String aggregateId;
 
-    @Column(name = "aggregate_version", nullable = false)
-    private long aggregateVersion;
+    @Column(name = "snapshot_version", nullable = false)
+    private int snapshotVersion;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload", columnDefinition = "jsonb")
-    private String payload;
+    @Column(name = "snapshot_payload", columnDefinition = "jsonb")
+    private String snapshotPayload;
 }
