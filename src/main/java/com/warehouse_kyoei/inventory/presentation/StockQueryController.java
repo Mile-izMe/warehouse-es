@@ -1,42 +1,47 @@
 package com.warehouse_kyoei.inventory.presentation;
 
+import com.warehouse_kyoei.inventory.application.query.StockQuery.GetStockDailyQuery;
+import com.warehouse_kyoei.inventory.application.query.StockQuery.GetStockQuery;
 import com.warehouse_kyoei.inventory.application.query.StockQueryService;
-import com.warehouse_kyoei.inventory.presentation.dto.request.StockAdjustRequest;
-import com.warehouse_kyoei.inventory.presentation.dto.request.StockPickRequest;
-import com.warehouse_kyoei.inventory.presentation.dto.request.StockReceiveRequest;
-import com.warehouse_kyoei.inventory.presentation.dto.response.StockResponse;
-import jakarta.validation.Valid;
+import com.warehouse_kyoei.inventory.presentation.dto.response.StockDailyMovementResponse;
+import com.warehouse_kyoei.inventory.presentation.dto.response.StockLotBreakdownResponse;
+import com.warehouse_kyoei.inventory.presentation.dto.response.StockSummaryResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/warehouses/{warehouseCode}/stock")
+@RequestMapping("/api/warehouses/{warehouseCode}/stock/{skuCode}")
 @RequiredArgsConstructor
 public class StockQueryController {
 
     private final StockQueryService service;
 
-    @GetMapping("/{skuCode}")
-    public StockResponse get(@PathVariable String warehouseCode, @PathVariable String skuCode) {
-        return service.getCurrent(warehouseCode, skuCode);
+    @GetMapping("/summary")
+    public StockSummaryResponse summary(
+            @PathVariable String warehouseCode,
+            @PathVariable String skuCode) {
+        GetStockQuery query = new GetStockQuery(warehouseCode, skuCode);
+        return service.getSummary(query);
     }
 
-    @PostMapping("/{skuCode}/receive")
-    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
-    public StockResponse receive(@PathVariable String warehouseCode, @PathVariable String skuCode,
-                                 @Valid @RequestBody StockReceiveRequest req) {
-        return service.receive(warehouseCode, skuCode, req);
+    @GetMapping("/lots")
+    public StockLotBreakdownResponse lots(
+            @PathVariable String warehouseCode,
+            @PathVariable String skuCode) {
+        GetStockQuery query = new GetStockQuery(warehouseCode, skuCode);
+        return service.getLotBreakdown(query);
     }
 
-    @PostMapping("/{skuCode}/pick")
-    public StockResponse pick(@PathVariable String warehouseCode, @PathVariable String skuCode,
-                              @Valid @RequestBody StockPickRequest req) {
-        return service.pick(warehouseCode, skuCode, req);
-    }
-
-    @PostMapping("/{skuCode}/adjust")
-    public StockResponse adjust(@PathVariable String warehouseCode, @PathVariable String skuCode,
-                                @Valid @RequestBody StockAdjustRequest req) {
-        return service.adjust(warehouseCode, skuCode, req);
+    @GetMapping("/daily")
+    public List<StockDailyMovementResponse> daily(
+            @PathVariable String warehouseCode, @PathVariable String skuCode,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        GetStockDailyQuery query = new GetStockDailyQuery(warehouseCode, skuCode, from, to);
+        return service.getDailyMovement(query);
     }
 }
