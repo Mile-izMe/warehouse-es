@@ -14,30 +14,12 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        final String securitySchemeName = "bearerAuth";
 
         return new OpenAPI()
                 .info(new Info()
                         .title("Warehouse API documentation")
                         .version("1.0.0")
                         .description("API document for Warehouse management system"));
-
-//                .components(new Components()
-//                        .addSecuritySchemes(securitySchemeName,
-//                                new SecurityScheme()
-//                                        .name(securitySchemeName)
-//                                        .type(SecurityScheme.Type.HTTP)
-//                                        .scheme("bearer")
-//                                        .bearerFormat("JWT")));
-    }
-
-    @Bean
-    public GroupedOpenApi publicApi() {
-        return GroupedOpenApi.builder()
-                .group("warehouse-api")
-                .packagesToScan("com.warehouse_kyoei")
-                .pathsToMatch("/api/**")
-                .build();
     }
 
 }
