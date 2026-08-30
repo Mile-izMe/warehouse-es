@@ -26,4 +26,4 @@ springdoc:
     operationsSorter: method # Sort API by: GET, POST, PUT, DELETE
     tagsSorter: alpha        # Sort Controller by alphabet
 
-  packages-to-scan: com.warehouse_es
+  packages-to-scan: com.warehouse_kyoei
