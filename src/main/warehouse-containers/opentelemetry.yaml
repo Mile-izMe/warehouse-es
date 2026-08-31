@@ -21,3 +21,7 @@ services:
       - "4318:4318"     # OTLP HTTP receiver (Spring Boot push to this port if HTTP)
     depends_on:
       - jaeger
+
+networks:
+  warehouse-network:
+    external: true

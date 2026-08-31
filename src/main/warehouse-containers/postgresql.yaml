@@ -14,7 +14,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - warehouse-network
 
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  warehouse-network:
+    external: true
