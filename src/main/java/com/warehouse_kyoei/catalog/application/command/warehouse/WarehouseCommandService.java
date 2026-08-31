@@ -4,6 +4,7 @@ import com.warehouse_kyoei.catalog.domain.warehouse.Warehouse;
 import com.warehouse_kyoei.catalog.domain.warehouse.WarehouseRepository;
 import com.warehouse_kyoei.catalog.application.command.warehouse.WarehouseCommand.CreateWarehouseCommand;
 import com.warehouse_kyoei.catalog.application.command.warehouse.WarehouseCommand.UpdateWarehouseCommand;
+import com.warehouse_kyoei.catalog.domain.warehouse.WarehouseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,7 @@ public class WarehouseCommandService {
     // Command Object (Receive data from Controller, # HTTP Request)
     @Transactional
     public Warehouse createWarehouse(CreateWarehouseCommand cmd) {
-        if (warehouseRepository.existsByWarehouseCodeAndStatus(cmd.code(), "ACTIVE")) {
+        if (warehouseRepository.existsByWarehouseCodeAndStatus(cmd.code(), WarehouseStatus.ACTIVE)) {
             throw new IllegalArgumentException("Mã kho đã tồn tại và đang hoạt động!");
         }
 

@@ -9,6 +9,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     Optional<Product> findBySku(String skuCode);
 
-    boolean existsBySkuAndStatus(String skuCode, String status);
+    boolean existsBySkuAndStatus(String skuCode, ProductStatus status);
 
 }

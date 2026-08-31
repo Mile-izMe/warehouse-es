@@ -18,7 +18,7 @@ public class ProcessedEvent {
 
     @Id
     @Column(name = "id")
-    private UUID eventId;
+    private String eventId;
 
     private Instant processedAt;
 }

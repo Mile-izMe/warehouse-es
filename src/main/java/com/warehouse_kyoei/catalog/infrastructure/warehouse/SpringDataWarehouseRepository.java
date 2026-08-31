@@ -13,7 +13,7 @@ public interface SpringDataWarehouseRepository extends JpaRepository<WarehouseEn
 
     Optional<WarehouseEntity> findByWarehouseCode(String warehouseCode);
 
-    boolean existsByWarehouseCodeAndStatus(String warehouseCode, String status);
+    boolean existsByWarehouseCodeAndStatus(String warehouseCode, WarehouseStatus status);
 
     List<WarehouseEntity> findAllByStatus(WarehouseStatus status);
 }

@@ -8,7 +8,7 @@ public interface WarehouseRepository {
 
     Optional<Warehouse> findByWarehouseCode(String warehouseCode);
 
-    boolean existsByWarehouseCodeAndStatus(String warehouseCode, String status);
+    boolean existsByWarehouseCodeAndStatus(String warehouseCode, WarehouseStatus status);
 
     Warehouse save(Warehouse warehouse);
 

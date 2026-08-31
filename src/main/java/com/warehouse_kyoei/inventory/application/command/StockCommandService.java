@@ -30,21 +30,21 @@ public class StockCommandService {
     private final StockCommandRepository repository;
 
     public StockResponse receive(String warehouseCode, String skuCode, StockReceiveRequest request) {
-        validateReferenceData(warehouseCode, skuCode);
+        validateReferenceData(skuCode, warehouseCode);
         StockAggregate aggregate = repository.load(warehouseCode, skuCode);
         aggregate.receive(request.quantity(), request.lotNumber(), request.sourceRef());
         return repository.persist(aggregate);
     }
 
     public StockResponse pick(String warehouseCode, String skuCode, StockPickRequest request) {
-        validateReferenceData(warehouseCode, skuCode);
+        validateReferenceData(skuCode, warehouseCode);
         StockAggregate aggregate = repository.load(warehouseCode, skuCode);
         aggregate.pick(request.quantity(), request.reason(), request.performedBy());
         return repository.persist(aggregate);
     }
 
     public StockResponse adjust(String warehouseCode, String skuCode, StockAdjustRequest request) {
-        validateReferenceData(warehouseCode, skuCode);
+        validateReferenceData(skuCode, warehouseCode);
         StockAggregate aggregate = repository.load(warehouseCode, skuCode);
         aggregate.adjust(request.delta(), request.reason(), request.performedBy());
         return repository.persist(aggregate);

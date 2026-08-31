@@ -27,7 +27,7 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
     }
 
     @Override
-    public boolean existsByWarehouseCodeAndStatus(String warehouseCode, String status) {
+    public boolean existsByWarehouseCodeAndStatus(String warehouseCode, WarehouseStatus status) {
         return jpaRepository.existsByWarehouseCodeAndStatus(warehouseCode, status);
     }
 

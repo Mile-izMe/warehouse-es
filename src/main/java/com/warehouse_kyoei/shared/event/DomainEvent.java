@@ -22,12 +22,6 @@ public interface DomainEvent {
     long aggregateVersion();
     Instant occurredAt();
 
-    /**
-     * Tự động lấy tên Class làm eventType (VD: "StockReceived").
-     * @JsonProperty giúp Jackson buộc phải thêm trường này vào chuỗi JSON.
-     * Bên Consumer sẽ đọc trường này để phân loại sự kiện.
-     */
-    @JsonProperty("eventType")
     default String eventType() {
         return this.getClass().getSimpleName();
     }

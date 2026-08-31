@@ -1,5 +1,6 @@
 package com.warehouse_kyoei.shared.eventstore;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.warehouse_kyoei.inventory.domain.event.StockEvents;
@@ -26,7 +27,9 @@ public class EventSerializer {
     private final Map<String, Function<String, DomainEvent>> deserializers;
 
     public EventSerializer() {
-        this.mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        this.mapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.deserializers = Map.of(
                 "StockReceived", json -> readValue(json, StockEvents.StockReceived.class),
                 "StockPicked", json -> readValue(json, StockEvents.StockPicked.class),

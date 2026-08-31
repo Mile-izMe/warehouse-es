@@ -15,11 +15,8 @@ public class ProductResponse {
     private String name;
     private String description;
     private String unit;
-
-    private BigDecimal price;
-    private Integer stockQuantity;
-    private String categoryName;
-    private Boolean isActive;
+    private BigDecimal minStock;
+    private String status;
 
     private Instant createdAt;
     private Instant updatedAt;

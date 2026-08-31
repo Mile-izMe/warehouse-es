@@ -85,7 +85,7 @@ public class KafkaProducerConfig {
 
         // NOTE: If you enable transactions, every kafkaTemplate.send() must be executed within a @Transactional method
         // or using kafkaTemplate.executeInTransaction(). Otherwise, it will throw an IllegalStateException.
-        factory.setTransactionIdPrefix("tx-");
+        // factory.setTransactionIdPrefix("tx-");
 
         return factory;
     }

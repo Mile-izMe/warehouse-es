@@ -19,6 +19,7 @@ import org.springframework.kafka.support.converter.RecordMessageConverter;
 import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 import org.springframework.kafka.support.mapping.DefaultJackson2JavaTypeMapper;
 import org.springframework.kafka.support.mapping.Jackson2JavaTypeMapper;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
@@ -45,22 +46,15 @@ public class KafkaConsumerConfiguration {
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                bootstrapAddress
-        );
-        props.put(
-                ConsumerConfig.GROUP_ID_CONFIG,
-                consumerConfiguration.getGroupIdPrefix()
-        );
-        props.put(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class
-        );
-        props.put(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class
-        );
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerConfiguration.getGroupIdPrefix());
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.warehouse_kyoei.*");
+        props.put(JsonDeserializer.TYPE_MAPPINGS,
+                "StockReceived:com.warehouse_kyoei.inventory.domain.event.StockEvents$StockReceived," +
+                        "StockPicked:com.warehouse_kyoei.inventory.domain.event.StockEvents$StockPicked," +
+                        "StockAdjusted:com.warehouse_kyoei.inventory.domain.event.StockEvents$StockAdjusted");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -73,35 +67,14 @@ public class KafkaConsumerConfiguration {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
 
-        // NOTE: Injects the JSON converter defined below.
-        factory.setRecordMessageConverter(converter());
-
         // NOTE: Configures what happens when message processing fails.
         // If processing fails 'maxFailure' times, the message is sent to a Dead Letter Topic (DLT) using the provided template.
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
                 new DeadLetterPublishingRecoverer(template),
                 new FixedBackOff(1000L, consumerConfiguration.getMaxFailure())
         );
-
         factory.setCommonErrorHandler(errorHandler);
 
         return factory;
-    }
-
-    // NOTE: This converter is responsible for transforming the JSON string received from Kafka into a Java Object (POJO).
-    @Bean
-    public RecordMessageConverter converter() {
-        StringJsonMessageConverter converter = new StringJsonMessageConverter();
-        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
-        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.TYPE_ID);
-
-        typeMapper.addTrustedPackages("com.warehouse_es.common.kafka");
-
-        Map<String, Class<?>> mappings = new HashMap<>();
-        mappings.put("custom", CustomMessage.class);
-
-        typeMapper.setIdClassMapping(mappings);
-        converter.setTypeMapper(typeMapper);
-        return converter;
     }
 }

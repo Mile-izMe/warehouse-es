@@ -22,13 +22,15 @@ public class IdempotencyHelper {
      * @param businessLogic
      */
     public void execute(UUID eventId, String projectionName, Runnable businessLogic) {
-        if (processedEventRepo.existsById(eventId)) {
+        String idempotencyKey = eventId.toString() + ":" + projectionName;
+
+        if (processedEventRepo.existsById(idempotencyKey)) {
             log.info("[{}] Event {} đã xử lý. Bỏ qua.", projectionName, eventId);
             return;
         }
 
         businessLogic.run();
 
-        processedEventRepo.save(new ProcessedEvent(eventId, Instant.now()));
+        processedEventRepo.save(new ProcessedEvent(idempotencyKey, Instant.now()));
     }
 }

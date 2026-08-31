@@ -8,9 +8,19 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate # Let flyway create table
-    show-sql: true
+#    show-sql: true
   kafka:
     bootstrap-servers: localhost:9092
+    template:
+      observation-enabled: true # Producer
+    listener:
+      observation-enabled: true # Consumer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.warehouse_kyoei.*"
+        spring.json.type.mapping: "StockReceived:com.warehouse_kyoei.inventory.domain.event.StockEvents$StockReceived,StockPicked:com.warehouse_kyoei.inventory.domain.event.StockEvents$StockPicked,StockAdjusted:com.warehouse_kyoei.inventory.domain.event.StockEvents$StockAdjusted"
 
 app:
   kafka:
@@ -19,6 +29,18 @@ app:
     consumer:
       group-id-prefix: warehouse-group-id
       max-failure: 3
+
+#logging:
+#  level:
+#    org.hibernate.orm.jdbc.bind: trace
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0 # 1.0 = trace 100% request (dev); production lower to 0.1
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
 
 springdoc:
   swagger-ui:
